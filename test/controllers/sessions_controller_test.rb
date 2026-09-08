@@ -29,12 +29,13 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "new offers only Authentik when it's the only way in" do
+  test "new drops email sign in but keeps passkeys when Authentik is the only way in" do
     with_authentik_only do
       untenanted do
         get new_session_path
 
         assert_select "form[action=?]", Authentik.authorization_path
+        assert_select "form[action=?]", session_passkey_path
         assert_select "#log_in", false
       end
     end

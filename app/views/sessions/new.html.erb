@@ -22,16 +22,19 @@
         <%= icon_tag "arrow-right" %>
       </button>
     <% end %>
-
-    <div class="margin-block-start">
-      <%= passkey_sign_in_button "Sign in with a passkey", session_passkey_path,
-            options: @authentication_options,
-            mediation: "conditional",
-            error: { class: "txt-negative margin-block-half" },
-            cancellation: { class: "txt-subtle margin-block-half" },
-            class: "btn btn--plain txt-link center txt-small" %>
-    </div>
   <% end %>
+
+  <%# Passkeys stay on offer even when Authentik is the only way in: they don't
+      involve email, and they're the way back into an instance whose identity
+      provider is unreachable. %>
+  <div class="margin-block-start">
+    <%= passkey_sign_in_button "Sign in with a passkey", session_passkey_path,
+          options: @authentication_options,
+          mediation: "conditional",
+          error: { class: "txt-negative margin-block-half" },
+          cancellation: { class: "txt-subtle margin-block-half" },
+          class: "btn btn--plain txt-link center txt-small" %>
+  </div>
 
   <% if Authentik.configured? %>
     <div class="margin-block-start">

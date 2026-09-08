@@ -143,7 +143,7 @@ Then set these on your Fizzy container:
 | `AUTHENTIK_CLIENT_SECRET` | yes | The provider's client secret |
 | `AUTHENTIK_LABEL` | no | Name to show on the button. Defaults to `Authentik` |
 | `AUTHENTIK_SCOPES` | no | Scopes to request. Defaults to `openid email profile` |
-| `AUTHENTIK_ONLY` | no | Set to `true` to remove email sign-in and signup entirely |
+| `AUTHENTIK_ONLY` | no | Set to `true` to close email sign-in and signup. Passkeys stay available |
 | `AUTHENTIK_SIGN_OUT_URL` | no | Authentik's end-session URL. When set, signing out of Fizzy signs you out of Authentik too |
 
 You must also set `BASE_URL` (see above): Authentik will only redirect back to the one URI you registered, and Fizzy builds it from `BASE_URL`.
@@ -160,9 +160,9 @@ Two situations are refused rather than guessed at, with an explanation on the si
 
 A user who's been deactivated in Fizzy doesn't come back by signing in through Authentik — an admin has to re-invite them, exactly as with email sign-in.
 
-**If you set `AUTHENTIK_ONLY=true`**, email sign-in and signup are both closed, so Authentik is the only way in.
-To undo it, unset the variable and recreate the container.
-A magic link won't get you back in on its own, so keep this in mind before locking down an instance you can't restart.
+**If you set `AUTHENTIK_ONLY=true`**, email sign-in and signup are both closed.
+Passkeys keep working, and they're your way back in if Authentik itself becomes unreachable — register one before you lock the instance down.
+Otherwise the only way to undo it is to unset the variable and recreate the container: a magic link can't be redeemed once email sign-in is closed, since the flow that issues one is the flow you've just turned off.
 
 #### S3 storage (optional)
 
