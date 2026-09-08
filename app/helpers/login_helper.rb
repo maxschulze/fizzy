@@ -4,7 +4,7 @@ module LoginHelper
   end
 
   def logout_url
-    main_app.new_session_path
+    Authentik.sign_out_url.presence || main_app.new_session_path
   end
 
   def redirect_to_login_url

@@ -32,6 +32,16 @@ A global `Identity` (email-based) can hold `Users` in multiple accounts, so
 an email address is not a single account membership. Board access is per-user
 `Access` records.
 
+## Sign-in paths
+
+Magic-link email codes and passkeys are always available. Authentik (OpenID
+Connect) is a third path, mounted only when its env vars are set — see
+`app/models/authentik.rb`. All three converge on `start_new_session_for`, and
+all resolve to an `Identity`: Authentik matches on the email claim and pins the
+provider's subject onto that same record, so it links an existing account
+rather than making a parallel one. Sign-in is untenanted, so its routes carry
+no account prefix and its callback path is fixed.
+
 ## UUID primary keys
 
 All tables use UUIDv7 keys, base36-encoded to 25 characters. Fixture UUIDs

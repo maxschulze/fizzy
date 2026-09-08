@@ -20,6 +20,28 @@ class SignupsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "new redirects to session#new when Authentik is the only way in" do
+    with_authentik_only do
+      untenanted do
+        get new_signup_path
+
+        assert_redirected_to new_session_url
+      end
+    end
+  end
+
+  test "create refuses to sign anyone up when Authentik is the only way in" do
+    with_authentik_only do
+      untenanted do
+        assert_no_difference -> { Identity.count } do
+          post signup_path, params: { signup: { email_address: "newuser-#{SecureRandom.hex(6)}@example.com" } }
+        end
+
+        assert_redirected_to new_session_url
+      end
+    end
+  end
+
   test "create" do
     email_address = "newuser-#{SecureRandom.hex(6)}@example.com"
 

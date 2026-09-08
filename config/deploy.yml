@@ -27,8 +27,13 @@ env:
     - VAPID_PRIVATE_KEY
     - SMTP_USERNAME
     - SMTP_PASSWORD
+    # - AUTHENTIK_CLIENT_SECRET # Uncomment to sign in with Authentik
   clear:
     BASE_URL: https://fizzy.example.com # The public URL of your Fizzy instance
+    # Sign in with Authentik (OpenID Connect) alongside email and passkeys.
+    # See docs/docker-deployment.md for the full list of settings.
+    # AUTHENTIK_ISSUER: https://auth.example.com/application/o/fizzy/
+    # AUTHENTIK_CLIENT_ID: your-client-id
     MAILER_FROM_ADDRESS: support@example.com # The email "from" address that Fizzy sends email from
     SMTP_ADDRESS: mail.example.com # The SMTP server you'll use to send email
     MULTI_TENANT: false # Set to true to allow multiple accounts to sign up

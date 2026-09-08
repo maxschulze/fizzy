@@ -9,6 +9,50 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "new offers Authentik when it's configured" do
+    untenanted do
+      get new_session_path
+
+      assert_select "form[action=?]", Authentik.authorization_path
+      assert_select "#log_in"
+    end
+  end
+
+  test "new offers only email sign in when Authentik isn't configured" do
+    without_authentik do
+      untenanted do
+        get new_session_path
+
+        assert_select "form[action=?]", Authentik.authorization_path, false
+        assert_select "#log_in"
+      end
+    end
+  end
+
+  test "new offers only Authentik when it's the only way in" do
+    with_authentik_only do
+      untenanted do
+        get new_session_path
+
+        assert_select "form[action=?]", Authentik.authorization_path
+        assert_select "#log_in", false
+      end
+    end
+  end
+
+  test "create refuses email sign in when Authentik is the only way in" do
+    with_authentik_only do
+      untenanted do
+        assert_no_difference -> { MagicLink.count } do
+          post session_path, params: { email_address: identities(:kevin).email_address }
+        end
+
+        assert_redirected_to new_session_path
+        assert_equal "Sign in with Authentik instead.", flash[:alert]
+      end
+    end
+  end
+
   test "new redirects authenticated users" do
     sign_in_as :kevin
 

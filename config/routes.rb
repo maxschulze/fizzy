@@ -168,6 +168,12 @@ Rails.application.routes.draw do
     end
   end
 
+  # Authentik single sign-on. OmniAuth's middleware owns POST /auth/authentik;
+  # these are the paths it hands the browser back to. The callback has to be a
+  # GET, since a cross-site POST wouldn't survive our forgery protection.
+  get "/auth/authentik/callback", to: "sessions/authentiks#create", as: :authentik_callback
+  get "/auth/failure", to: "sessions/authentiks#failure", as: :authentik_failure
+
   get "/signup", to: redirect("/signup/new")
 
   resource :signup, only: %i[ new create ] do

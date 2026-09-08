@@ -15,6 +15,10 @@ end
 
 WebMock.allow_net_connect!
 
+# Never let a test reach a real identity provider: OmniAuth's test mode replaces
+# both the request and callback phases with `OmniAuth.config.mock_auth`.
+OmniAuth.config.test_mode = true
+
 VCR.configure do |config|
   config.allow_http_connections_when_no_cassette = true
   config.cassette_library_dir = "test/vcr_cassettes"
@@ -50,7 +54,8 @@ module ActiveSupport
     fixtures :all
 
     include ActiveJob::TestHelper
-    include ActionTextTestHelper, CachingTestHelper, CardTestHelper, ChangeTestHelper, DnsTestHelper, SessionTestHelper
+    include ActionTextTestHelper, AuthentikTestHelper, CachingTestHelper, CardTestHelper, ChangeTestHelper,
+      DnsTestHelper, SessionTestHelper
     include Turbo::Broadcastable::TestHelper
 
     # Jobs must carry their own account context via AccountTenanted,
