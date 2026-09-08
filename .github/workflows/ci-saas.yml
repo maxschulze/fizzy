@@ -14,6 +14,9 @@ jobs:
       saas: false
   test_saas:
     name: Test (SaaS)
+    # The SaaS bundle resolves private gems with FIZZY_GH_TOKEN, which only
+    # exists upstream. Forks run the OSS job above and skip this one.
+    if: github.repository == 'basecamp/fizzy'
     uses: ./.github/workflows/test.yml
     with:
       saas: true
