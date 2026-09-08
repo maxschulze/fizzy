@@ -21,14 +21,13 @@ module Authentik
     def client_id     = settings.client_id
     def client_secret = settings.client_secret
     def label         = settings.label
-    def sign_out_url  = settings.sign_out_url if configured?
+
+    def sign_out_url
+      settings.sign_out_url if configured?
+    end
 
     def scopes
       settings.scopes.to_s.split
-    end
-
-    def discovery_endpoint
-      "#{issuer.to_s.chomp("/")}/.well-known/openid-configuration"
     end
 
     # Owned by OmniAuth's middleware rather than by our routes, and deliberately
@@ -36,10 +35,6 @@ module Authentik
     # for, and Authentik is configured with one fixed redirect URI.
     def authorization_path
       "/auth/#{PROVIDER}"
-    end
-
-    def callback_path
-      "#{authorization_path}/callback"
     end
 
     private
