@@ -7,13 +7,16 @@
 # environment variables. Same shape as the CSP initializer.
 #
 # ENV vars:
-#   AUTHENTIK_ISSUER        The provider's issuer URL, as shown in Authentik.
+#   AUTHENTIK_ISSUER        The provider's OpenID Configuration URL, minus the
+#                           .well-known/openid-configuration suffix. Not the
+#                           "OpenID Configuration Issuer" field, which differs
+#                           under Authentik's global issuer mode.
 #                           e.g. https://auth.example.com/application/o/fizzy/
 #   AUTHENTIK_CLIENT_ID     The provider's client ID
 #   AUTHENTIK_CLIENT_SECRET The provider's client secret
 #   AUTHENTIK_LABEL         Name to show on the sign-in button (default "Authentik")
 #   AUTHENTIK_SCOPES        Scopes to request (default "openid email profile")
-#   AUTHENTIK_ONLY          "true" hides email sign-in and signup entirely
+#   AUTHENTIK_ONLY          "true" closes email sign-in and signup; passkeys stay
 #   AUTHENTIK_SIGN_OUT_URL  Authentik's end-session URL. When set, signing out
 #                           of Fizzy signs you out of Authentik too.
 #

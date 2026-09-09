@@ -132,19 +132,20 @@ In Authentik, create an **OAuth2/OpenID Provider** and an application for it:
 
 - Set the redirect URI to `https://fizzy.example.com/auth/authentik/callback`, using your own host. Fizzy always uses this one path, so it doesn't change.
 - Leave the client type as **Confidential**, and make sure the `openid`, `email` and `profile` scopes are available.
-- Note the client ID, the client secret, and the issuer URL Authentik shows for the provider (it looks like `https://auth.example.com/application/o/fizzy/`).
+- Note the client ID and the client secret.
+- Note the **OpenID Configuration URL** the provider's page shows, minus the trailing `.well-known/openid-configuration` — that's the value for `AUTHENTIK_ISSUER` below. The path segment in it is the *application's* slug, not the provider's name.
 
 Then set these on your Fizzy container:
 
 | Variable | Required | What it does |
 | -------- | -------- | ------------ |
-| `AUTHENTIK_ISSUER` | yes | The provider's issuer URL, e.g. `https://auth.example.com/application/o/fizzy/` |
+| `AUTHENTIK_ISSUER` | yes | The provider's OpenID Configuration URL without the `.well-known/openid-configuration` suffix, e.g. `https://auth.example.com/application/o/fizzy/`. Don't use the *OpenID Configuration Issuer* field instead: it only matches this when the provider's Issuer mode is the default per-application one, and is just the Authentik root URL when it's set to "Same identifier is used for all providers" |
 | `AUTHENTIK_CLIENT_ID` | yes | The provider's client ID |
 | `AUTHENTIK_CLIENT_SECRET` | yes | The provider's client secret |
 | `AUTHENTIK_LABEL` | no | Name to show on the button. Defaults to `Authentik` |
 | `AUTHENTIK_SCOPES` | no | Scopes to request. Defaults to `openid email profile` |
 | `AUTHENTIK_ONLY` | no | Set to `true` to close email sign-in and signup. Passkeys stay available |
-| `AUTHENTIK_SIGN_OUT_URL` | no | Authentik's end-session URL. When set, signing out of Fizzy signs you out of Authentik too |
+| `AUTHENTIK_SIGN_OUT_URL` | no | The provider's **End Session** URL, e.g. `https://auth.example.com/application/o/fizzy/end-session/`. When set, signing out of Fizzy signs you out of Authentik too |
 
 You must also set `BASE_URL` (see above): Authentik will only redirect back to the one URI you registered, and Fizzy builds it from `BASE_URL`.
 Your container needs to be able to reach Authentik over the network, since Fizzy reads the provider's configuration when someone signs in.
