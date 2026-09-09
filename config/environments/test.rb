@@ -70,4 +70,10 @@ Rails.application.configure do
 
   # Enable multi-tenant mode for tests
   config.x.multi_tenant.enabled = true
+
+  # Configure Authentik so its middleware is mounted for tests. Individual tests
+  # opt in with `with_authentik` and out with `without_authentik`.
+  config.x.authentik.issuer = "https://authentik.example.com/application/o/fizzy/"
+  config.x.authentik.client_id = "fizzy-test-client"
+  config.x.authentik.client_secret = "fizzy-test-secret" # gitleaks:allow
 end

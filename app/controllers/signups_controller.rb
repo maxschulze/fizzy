@@ -6,6 +6,7 @@ class SignupsController < ApplicationController
   rate_limit to: 10, within: 3.minutes, only: :create, with: -> { redirect_to new_signup_path, alert: "Try again later." }
   before_action :redirect_authenticated_user
   before_action :enforce_tenant_limit
+  before_action :ensure_email_signup_allowed
 
   layout "public"
 
@@ -29,6 +30,10 @@ class SignupsController < ApplicationController
 
     def enforce_tenant_limit
       redirect_to new_session_url unless Account.accepting_signups?
+    end
+
+    def ensure_email_signup_allowed
+      redirect_to new_session_url if Authentik.only?
     end
 
     def signup_params

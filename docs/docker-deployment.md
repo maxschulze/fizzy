@@ -123,6 +123,47 @@ puts "VAPID_PUBLIC_KEY=#{vapid_key.public_key}"
 
 Set those in the `VAPID_PRIVATE_KEY` and `VAPID_PUBLIC_KEY` environment variables.
 
+#### Authentik single sign-on (optional)
+
+Fizzy can offer "Sign in with Authentik" alongside the usual email and passkey sign-ins, using OpenID Connect.
+It's off unless you configure it, and it works with any OpenID Connect provider — Authentik is just what it's tested against.
+
+In Authentik, create an **OAuth2/OpenID Provider** and an application for it:
+
+- Set the redirect URI to `https://fizzy.example.com/auth/authentik/callback`, using your own host. Fizzy always uses this one path, so it doesn't change.
+- Leave the client type as **Confidential**, and make sure the `openid`, `email` and `profile` scopes are available.
+- Note the client ID, the client secret, and the issuer URL Authentik shows for the provider (it looks like `https://auth.example.com/application/o/fizzy/`).
+
+Then set these on your Fizzy container:
+
+| Variable | Required | What it does |
+| -------- | -------- | ------------ |
+| `AUTHENTIK_ISSUER` | yes | The provider's issuer URL, e.g. `https://auth.example.com/application/o/fizzy/` |
+| `AUTHENTIK_CLIENT_ID` | yes | The provider's client ID |
+| `AUTHENTIK_CLIENT_SECRET` | yes | The provider's client secret |
+| `AUTHENTIK_LABEL` | no | Name to show on the button. Defaults to `Authentik` |
+| `AUTHENTIK_SCOPES` | no | Scopes to request. Defaults to `openid email profile` |
+| `AUTHENTIK_ONLY` | no | Set to `true` to close email sign-in and signup. Passkeys stay available |
+| `AUTHENTIK_SIGN_OUT_URL` | no | Authentik's end-session URL. When set, signing out of Fizzy signs you out of Authentik too |
+
+You must also set `BASE_URL` (see above): Authentik will only redirect back to the one URI you registered, and Fizzy builds it from `BASE_URL`.
+Your container needs to be able to reach Authentik over the network, since Fizzy reads the provider's configuration when someone signs in.
+
+**Who gets in.** Fizzy matches on the email address Authentik reports:
+
+- If that email address already has a Fizzy account, they sign into it. Everything they already have — their boards, comments and notifications — is untouched, and they can still sign in by email or passkey afterwards.
+- If it's an email address Fizzy hasn't seen, an account is created for them and they're added to your instance's account, already verified and named. This means anyone who can sign into Authentik can get into Fizzy, so restrict who's bound to the application in Authentik.
+- If your instance has several accounts (see multi-tenant mode below), Fizzy won't guess which one to add them to, and they're asked to create their own instead.
+
+Fizzy remembers the user ID Authentik reports the first time someone signs in this way, so changing their email address in Authentik later keeps them on the same Fizzy account.
+Two situations are refused rather than guessed at, with an explanation on the sign-in page: an email address that's already linked to a different Authentik user, and an email address changed in Authentik to one that already belongs to somebody else in Fizzy.
+
+A user who's been deactivated in Fizzy doesn't come back by signing in through Authentik — an admin has to re-invite them, exactly as with email sign-in.
+
+**If you set `AUTHENTIK_ONLY=true`**, email sign-in and signup are both closed.
+Passkeys keep working, and they're your way back in if Authentik itself becomes unreachable — register one before you lock the instance down.
+Otherwise the only way to undo it is to unset the variable and recreate the container: a magic link can't be redeemed once email sign-in is closed, since the flow that issues one is the flow you've just turned off.
+
 #### S3 storage (optional)
 
 If you'd prefer that uploaded files were stored in an S3 bucket rather than in your mounted volume, you can set that up.
@@ -186,6 +227,10 @@ services:
       - SMTP_PASSWORD=pass
       - VAPID_PRIVATE_KEY=myvapidprivatekey
       - VAPID_PUBLIC_KEY=myvapidpublickey
+      # Optional: sign in with Authentik as well as by email
+      - AUTHENTIK_ISSUER=https://auth.example.com/application/o/fizzy/
+      - AUTHENTIK_CLIENT_ID=myauthentikclientid
+      - AUTHENTIK_CLIENT_SECRET=myauthentikclientsecret
     volumes:
       - fizzy:/rails/storage
 

@@ -76,6 +76,13 @@ The values you enter here will be specific to you, and you can get or create the
 
 Once you've made all those changes, commit them to your fork so they're saved.
 
+### Signing in with Authentik (optional)
+
+Fizzy can offer "Sign in with Authentik" next to the email and passkey sign-ins.
+The setup and the full list of settings are in the [Docker deployment guide](docker-deployment.md#authentik-single-sign-on-optional) — they're the same environment variables here.
+
+To use them with Kamal, add `AUTHENTIK_CLIENT_SECRET` to your `.kamal/secrets` file, and uncomment the `AUTHENTIK_*` entries in the `env` section of `config/deploy.yml`.
+
 ### Deploy Fizzy!
 
 You can now do your first deploy by running:

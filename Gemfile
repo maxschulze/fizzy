@@ -27,6 +27,8 @@ gem "trilogy", "~> 2.13"
 
 # Features
 gem "bcrypt", "~> 3.1.22"
+gem "omniauth", "~> 2.1"
+gem "omniauth_oidc", "~> 1.0" # Authentik and other OpenID Connect providers
 gem "geared_pagination", "~> 1.2"
 gem "rqrcode"
 gem "rouge"

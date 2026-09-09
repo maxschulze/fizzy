@@ -4,6 +4,7 @@ class SessionsController < ApplicationController
   disallow_account_scope
   require_unauthenticated_access except: :destroy
   rate_limit to: 10, within: 3.minutes, only: :create, with: :rate_limit_exceeded
+  before_action :ensure_email_sign_in_allowed, only: :create
 
   layout "public"
 
@@ -31,6 +32,15 @@ class SessionsController < ApplicationController
   end
 
   private
+    def ensure_email_sign_in_allowed
+      if Authentik.only?
+        respond_to do |format|
+          format.html { redirect_to new_session_path, alert: "Sign in with #{Authentik.label} instead." }
+          format.json { head :forbidden }
+        end
+      end
+    end
+
     def magic_link_from_sign_in_or_sign_up
       if identity = Identity.find_by_email_address(email_address)
         identity.send_magic_link

@@ -9,7 +9,9 @@ permissions:
 
 jobs:
   test:
-    if: github.event.pull_request.head.repo.full_name != github.repository
+    # Upstream runs this only for PRs from forks, since ci-saas.yml already
+    # covers its own branches. In a fork every PR is same-repo, so run them all.
+    if: github.repository != 'basecamp/fizzy' || github.event.pull_request.head.repo.full_name != github.repository
     uses: ./.github/workflows/test.yml
     with:
       saas: false
