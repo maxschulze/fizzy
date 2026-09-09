@@ -1,0 +1,3 @@
+Client ID: E2pdXSHeuyx6NhzmWi5o36aBV0t0kzlZBFULmmjI
+
+CLient Secret: JhYjpe1fxieJ5pUcdHFlSxe2FnyTvYwUpe8LuhuhgtVu4UQOXZQCYHNOVMrU6KuofDMqkTINwEaV4m2xjdakEBm0Ae3JLwKVNSCfCvyoogej5dmlEtFClpnSTzFqesgd
