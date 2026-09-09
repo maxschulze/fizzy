@@ -150,6 +150,10 @@ Then set these on your Fizzy container:
 You must also set `BASE_URL` (see above): Authentik will only redirect back to the one URI you registered, and Fizzy builds it from `BASE_URL`.
 Your container needs to be able to reach Authentik over the network, since Fizzy reads the provider's configuration when someone signs in.
 
+Fizzy adds your Authentik server's origin to its Content Security Policy automatically, which it has to: the sign-in button submits a form that redirects out to Authentik, and browsers check `form-action` against every hop of that redirect.
+If you see `violates the following Content Security Policy directive: "form-action 'self'"` in the browser console when you click the button, `AUTHENTIK_ISSUER` isn't reaching the container — check it's set, then restart.
+You can also name the origin yourself with `CSP_FORM_ACTION`.
+
 **Who gets in.** Fizzy matches on the email address Authentik reports:
 
 - If that email address already has a Fizzy account, they sign into it. Everything they already have — their boards, comments and notifications — is untouched, and they can still sign in by email or passkey afterwards.

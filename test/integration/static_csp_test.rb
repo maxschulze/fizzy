@@ -35,6 +35,17 @@ class StaticCspTest < ActionDispatch::IntegrationTest
     assert_not_equal STATIC_POLICY, csp
   end
 
+  test "the app policy lets the sign-in form redirect out to the Authentik provider" do
+    sign_in_as identities(:david)
+    get root_url
+
+    form_action = response.headers[ActionDispatch::Constants::CONTENT_SECURITY_POLICY][/form-action ([^;]+)/, 1]
+
+    assert_includes form_action, "'self'"
+    assert_includes form_action, "https://authentik.example.com"
+    assert_not_includes form_action, "/application/o/fizzy"
+  end
+
   private
     # Suppress the diagnostics page the test environment would otherwise
     # render, so the request falls through to the exceptions app like in

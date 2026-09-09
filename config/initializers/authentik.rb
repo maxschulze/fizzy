@@ -41,4 +41,18 @@ Rails.application.configure do
   config.x.authentik.scopes = setting.(:scopes, "openid email profile")
   config.x.authentik.sign_out_url = setting.(:sign_out_url)
   config.x.authentik.only = setting.(:only).to_s == "true"
+
+  # Browsers enforce form-action against every hop of a form submission's
+  # redirect chain, and the sign-in button posts to a path that redirects out
+  # to the provider. The CSP therefore has to name the provider's origin, so
+  # derive it here, next to the setting it comes from.
+  config.x.authentik.origin = begin
+    if (issuer = config.x.authentik.issuer).present?
+      uri = URI.parse(issuer)
+      port = ":#{uri.port}" unless uri.port == uri.default_port
+      "#{uri.scheme}://#{uri.host}#{port}" if uri.scheme && uri.host
+    end
+  rescue URI::InvalidURIError
+    nil
+  end
 end

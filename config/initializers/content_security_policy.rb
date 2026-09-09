@@ -7,6 +7,9 @@
 # settings. This allows fizzy-saas (or other deployments) to extend the base policy
 # without duplicating it.
 #
+# The Authentik provider's origin is added to form-action automatically when
+# Authentik is configured; see config/initializers/authentik.rb.
+#
 # ENV vars (space-separated sources):
 #   CSP_DEFAULT_SRC, CSP_SCRIPT_SRC, CSP_STYLE_SRC, CSP_CONNECT_SRC, CSP_FRAME_SRC,
 #   CSP_IMG_SRC, CSP_FONT_SRC, CSP_MEDIA_SRC, CSP_WORKER_SRC, CSP_FRAME_ANCESTORS,
@@ -66,7 +69,11 @@ Rails.application.configure do
     policy.object_src :none
     policy.base_uri :none
 
-    policy.form_action :self, *sources.(:form_action)
+    # Signing in with Authentik posts to our own path and redirects out to the
+    # provider, and form-action is enforced against every hop of that redirect,
+    # so the provider's origin has to be named here. Set by the Authentik
+    # initializer, which sorts before this one.
+    policy.form_action :self, *Array(config.x.authentik.origin), *sources.(:form_action)
     policy.frame_ancestors :self, *sources.(:frame_ancestors)
 
     # Specify URI for violation reports (e.g., Sentry CSP endpoint)
