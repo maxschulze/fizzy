@@ -70,6 +70,20 @@ If you aren't using SSL at all (for example, if you want to run it locally on yo
 docker run --publish 80:80 --env DISABLE_SSL=true ...
 ```
 
+#### Real-time updates
+
+Fizzy keeps boards, cards, the activity feed and notifications in sync by pushing changes to browsers over Action Cable.
+This doesn't need any extra ports or services: the browser opens a WebSocket to `/<account>/cable` on the same port as the app, and the Thruster process in the container proxies it through to Rails.
+If you put a proxy of your own in front, make sure it forwards the `Upgrade` and `Connection` headers (most do by default).
+
+Two things in the container do need to stay in place for this to work:
+
+- **The storage volume.** Background jobs and the live-update fan-out are backed by SQLite databases stored inside `/rails/storage` (`production_queue.sqlite3` and `production_cable.sqlite3`), so the volume must be persistent, and it must be the same volume for every app container that should see the same live updates. Containers or hosts with their own volumes have their own queue and cable databases, so changes won't cross between them. For a multi-host deployment, set `DATABASE_ADAPTER=mysql` so those databases are shared too.
+- **A job worker.** Live updates are delivered by background jobs. The container runs them alongside the web server by default (`SOLID_QUEUE_IN_PUMA` is on). If you set `SOLID_QUEUE_IN_PUMA=false`, you also need to run `bin/jobs` in a separate container, or changes made by other users won't reach the browser.
+
+The entrypoint prepares the databases automatically when the container starts with the default command.
+If you override the command or add extra containers, run `bin/rails db:prepare` yourself.
+
 #### SMTP Email
 
 Fizzy needs to be able to send email for its sign up/sign in flow, and for its regular summary emails.
