@@ -50,6 +50,18 @@ class NotificationTest < ActiveSupport::TestCase
     assert_turbo_stream_broadcasts [ kevin, :notifications ]
   end
 
+  test "broadcasting on create refreshes the notifications page" do
+    kevin = users(:kevin)
+
+    notifications(:layout_commented_kevin).destroy
+
+    assert_turbo_stream_broadcasts([ kevin, :notifications_index ], count: 1) do
+      perform_enqueued_jobs do
+        Notification.create!(user: kevin, source: events(:layout_commented), creator: users(:david))
+      end
+    end
+  end
+
   test "broadcast job renders account-scoped URLs" do
     kevin = users(:kevin)
     account = kevin.account
@@ -71,6 +83,16 @@ class NotificationTest < ActiveSupport::TestCase
     notification = notifications(:layout_commented_kevin)
 
     assert_turbo_stream_broadcasts([ notification.user, :notifications ], count: 1) do
+      perform_enqueued_jobs do
+        notification.read
+      end
+    end
+  end
+
+  test "broadcasting on update when read refreshes the notifications page" do
+    notification = notifications(:layout_commented_kevin)
+
+    assert_turbo_stream_broadcasts([ notification.user, :notifications_index ], count: 1) do
       perform_enqueued_jobs do
         notification.read
       end

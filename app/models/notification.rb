@@ -26,6 +26,10 @@ class Notification < ApplicationRecord
   after_update_commit  -> { broadcast_update }
   after_destroy_commit -> { broadcast_remove_to user, :notifications }
 
+  # The notifications page groups notifications into unread and read lists, so a
+  # granular prepend can't keep it accurate. Refresh it as a whole instead.
+  after_commit -> { broadcast_refresh_later_to user, :notifications_index }
+
   delegate :notifiable_target, to: :source
   delegate :identity, to: :user
 

@@ -1,6 +1,8 @@
 <% @page_title = "Notifications" %>
 <% @hide_footer_frames = true %>
 
+<%= turbo_stream_from Current.user, :notifications_index %>
+
 <% content_for :header do %>
   <div class="header__actions header__actions--start">
     <%= back_link_to "Home", root_path, "keydown.left@document->hotkey#click keydown.esc@document->hotkey#click" %>
