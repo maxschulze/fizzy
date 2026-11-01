@@ -132,6 +132,38 @@ class Account::ImportTest < ActiveSupport::TestCase
     export_tempfile&.unlink
   end
 
+  test "a webhook an app set up imports with its creator, leaving the app behind" do
+    source_account = accounts("37s")
+    exporter = users(:david)
+    identity = exporter.identity
+    webhooks(:active).update!(creator: users(:kevin), created_via: oauth_clients(:mcp_client))
+
+    export = Account::Export.create!(account: source_account, user: exporter)
+    export.build
+
+    export_tempfile = Tempfile.new([ "export", ".zip" ])
+    export.file.open { |f| FileUtils.cp(f.path, export_tempfile.path) }
+
+    source_account.destroy!
+
+    target_account = Account.create_with_owner(account: { name: "Import Test" }, owner: { identity: identity, name: exporter.name })
+    import = Account::Import.create!(identity: identity, account: target_account)
+    Current.set(account: target_account) do
+      import.file.attach(io: File.open(export_tempfile.path), filename: "export.zip", content_type: "application/zip")
+    end
+
+    import.check
+    assert_not import.failed?, import.failure_reason
+
+    import.process
+    webhook = target_account.webhooks.find_by!(name: webhooks(:active).name)
+    assert_equal users(:kevin).id, webhook.creator_id
+    assert_nil webhook.created_via_id
+  ensure
+    export_tempfile&.close
+    export_tempfile&.unlink
+  end
+
   test "check sets no failure_reason for unexpected errors" do
     import = Account::Import.create!(identity: identities(:david), account: Account.create!(name: "Import Test"))
 
@@ -185,6 +217,37 @@ class Account::ImportTest < ActiveSupport::TestCase
   ensure
     tempfile&.close
     tempfile&.unlink
+  end
+
+  test "check sets failure_reason to invalid_export when a record entry inflates past the size limit" do
+    source_account = accounts("37s")
+    exporter = users(:david)
+    identity = exporter.identity
+
+    export = Account::Export.create!(account: source_account, user: exporter)
+    export.build
+
+    export_tempfile = Tempfile.new([ "export", ".zip" ])
+    export.file.open { |f| FileUtils.cp(f.path, export_tempfile.path) }
+
+    bomb_tempfile = with_oversized_tag(export_tempfile)
+
+    source_account.destroy!
+
+    target_account = Account.create_with_owner(account: { name: "Import Test" }, owner: { identity: identity, name: exporter.name })
+    import = Account::Import.create!(identity: identity, account: target_account)
+    Current.set(account: target_account) do
+      import.file.attach(io: File.open(bomb_tempfile.path), filename: "export.zip", content_type: "application/zip")
+    end
+
+    assert_raises(ZipFile::EntryTooLargeError) { import.check }
+
+    assert import.reload.failed_due_to_invalid_export?
+  ensure
+    export_tempfile&.close
+    export_tempfile&.unlink
+    bomb_tempfile&.close
+    bomb_tempfile&.unlink
   end
 
   test "check sets failure_reason to conflict when records already exist" do
@@ -311,6 +374,29 @@ class Account::ImportTest < ActiveSupport::TestCase
   end
 
   private
+    def with_oversized_tag(export_tempfile)
+      bomb = Tempfile.new([ "oversized_export", ".zip" ])
+      bomb.binmode
+
+      File.open(export_tempfile.path, "rb") do |file|
+        reader = ZipFile::Reader.new(file)
+        writer = ZipFile::Writer.new(bomb)
+
+        target = reader.glob("data/tags/*.json").first
+        tag = JSON.parse(reader.read(target))
+
+        reader.glob("**/*").reject { |name| name.end_with?("/") || name == target }.each do |entry|
+          writer.add_file(entry, reader.read(entry))
+        end
+
+        writer.add_file target, tag.merge("title" => "a" * (ZipFile::Reader::MAX_BUFFERED_ENTRY_SIZE + 1)).to_json
+        writer.close
+      end
+
+      bomb.rewind
+      bomb
+    end
+
     def import_with_attached_zip
       account = Account.create!(name: "Disk Check")
       import = Account::Import.create!(account: account, identity: identities(:david))
