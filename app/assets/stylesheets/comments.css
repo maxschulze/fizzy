@@ -98,6 +98,23 @@
     }
   }
 
+  /* Float the reply box over the comments until its own spot scrolls into view */
+  .comment--new {
+    &:where(.comments &) {
+      background-color: var(--color-canvas);
+      box-shadow: 0 0 0 var(--comment-padding-inline) var(--color-canvas); /* Cover overhanging avatars */
+      inset-block-end: calc(var(--footer-height) + env(safe-area-inset-bottom));
+      padding-block: var(--block-space-half);
+      position: sticky;
+      z-index: 4; /* Above comment reactions, below their open pickers */
+
+      /* Stay compact while floating until you start writing */
+      lexxy-editor.lexxy-editor--empty:not(:focus-within) {
+        --lexxy-editor-rows: 3lh;
+      }
+    }
+  }
+
   .comment__author {
     .btn {
       font-weight: inherit;
