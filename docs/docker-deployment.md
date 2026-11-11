@@ -86,6 +86,11 @@ Two things in the container do need to stay in place for this to work:
 - **The storage volume.** Background jobs and the live-update fan-out are backed by SQLite databases stored inside `/rails/storage` (`production_queue.sqlite3` and `production_cable.sqlite3`), so the volume must be persistent, and it must be the same volume for every app container that should see the same live updates. Containers or hosts with their own volumes have their own queue and cable databases, so changes won't cross between them. For a multi-host deployment, set `DATABASE_ADAPTER=mysql` so those databases are shared too.
 - **A job worker.** Live updates are delivered by background jobs. The container runs them alongside the web server by default (`SOLID_QUEUE_IN_PUMA` is on). If you set `SOLID_QUEUE_IN_PUMA=false`, you also need to run `bin/jobs` in a separate container, or changes made by other users won't reach the browser.
 
+By default the job worker runs as four extra Ruby processes forked from the web server.
+On a small instance you can save memory by running Puma as a single process (`WEB_CONCURRENCY=0`) with the job worker as threads inside it (`SOLID_QUEUE_MODE=async`).
+That roughly halves the container's memory use, at the cost of jobs and web requests sharing one process, so a long-running job such as a large export can slow pages down while it runs.
+A separate `bin/jobs` container uses more memory than either, because it loads its own copy of the app.
+
 The entrypoint prepares the databases automatically when the container starts with the default command.
 If you override the command or add extra containers, run `bin/rails db:prepare` yourself.
 

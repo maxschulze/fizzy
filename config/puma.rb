@@ -11,6 +11,10 @@ plugin :tmp_restart
 # solid_queue_recurring_tasks and takes Puma down with it.
 unless Fizzy.saas? || Rails.env.local? || ENV["SOLID_QUEUE_IN_PUMA"] == "false"
   plugin :solid_queue
+
+  # Forked, the supervisor, dispatcher, worker and scheduler are each a Ruby process of their own.
+  # Async runs them as threads inside Puma, which roughly halves a small instance's memory.
+  solid_queue_mode :async if ENV["SOLID_QUEUE_MODE"] == "async"
 end
 
 # Expose Prometheus metrics at http://0.0.0.0:9394/metrics (SaaS only).
